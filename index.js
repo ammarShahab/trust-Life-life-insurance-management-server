@@ -1,7 +1,7 @@
-const { MongoClient, ServerApiVersion } = require("mongodb");
 const express = require("express");
-require("dotenv").config();
+const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -29,19 +29,27 @@ async function run() {
     const db = client.db("trustLife_db");
     const policiesCollection = db.collection("policies");
 
+    // save policies data to the db
     app.post("/policies", async (req, res) => {
       try {
         const newPolicy = req.body;
         console.log(newPolicy);
 
-        /*  if (!newPolicy.policyName || !newPolicy.premium) {
-          return res.status(400).json({ message: "Missing required fields" });
-        } */
-
         const result = await policiesCollection.insertOne(newPolicy);
         res.send(result);
       } catch (error) {
         console.error("Error creating policy:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // get all the policies to show in Ui
+    app.get("/policies", async (req, res) => {
+      try {
+        const policies = await policiesCollection.find().toArray();
+        res.send(policies);
+      } catch (error) {
+        console.error("❌ Error fetching policies:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
