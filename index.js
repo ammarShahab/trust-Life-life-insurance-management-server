@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
@@ -50,6 +50,39 @@ async function run() {
         res.send(policies);
       } catch (error) {
         console.error("❌ Error fetching policies:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // update policies
+    app.patch("/policies/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const updatedPolicy = req.body;
+
+        // 🛡️ Prevent MongoDB _id mutation error
+        console.log("Updating Policy ID:", id, updatedPolicy);
+        delete updatedPolicy._id;
+
+        // Check for valid ObjectId
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid policy ID" });
+        }
+
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: updatedPolicy,
+        };
+
+        const result = await policiesCollection.updateOne(filter, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res.status(404).json({ message: "Policy not found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("❌ Error updating policy:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
