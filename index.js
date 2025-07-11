@@ -87,6 +87,31 @@ async function run() {
       }
     });
 
+    // Delete policies
+    app.delete("/policies/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid policy ID" });
+        }
+
+        const filter = { _id: new ObjectId(id) };
+        const result = await policiesCollection.deleteOne(filter);
+
+        if (result.deletedCount === 0) {
+          return res
+            .status(404)
+            .json({ message: "Policy not found or already deleted" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("❌ Error deleting policy:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
     // Optional: Test ping
     await db.command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
