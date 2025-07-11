@@ -22,25 +22,33 @@ const client = new MongoClient(uri, {
   },
 });
 
-let db;
-
 async function run() {
   try {
     await client.connect();
-    db = client.db("trustlife"); // You can change this to your actual DB name
+
+    const db = client.db("trustLife_db");
+    const policiesCollection = db.collection("policies");
+
+    app.post("/policies", async (req, res) => {
+      try {
+        const newPolicy = req.body;
+        console.log(newPolicy);
+
+        /*  if (!newPolicy.policyName || !newPolicy.premium) {
+          return res.status(400).json({ message: "Missing required fields" });
+        } */
+
+        const result = await policiesCollection.insertOne(newPolicy);
+        res.send(result);
+      } catch (error) {
+        console.error("Error creating policy:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
 
     // Optional: Test ping
     await db.command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
-
-    // Example collection usage
-    const usersCollection = db.collection("users");
-
-    // Example route using collection
-    app.get("/users", async (req, res) => {
-      const users = await usersCollection.find().toArray();
-      res.send(users);
-    });
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
   }
