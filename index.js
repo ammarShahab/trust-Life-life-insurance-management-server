@@ -28,6 +28,7 @@ async function run() {
 
     const db = client.db("trustLife_db");
     const policiesCollection = db.collection("policies");
+    const customersCollection = db.collection("customers");
 
     // save policies data to the db
     app.post("/policies", async (req, res) => {
@@ -108,6 +109,37 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.error("❌ Error deleting policy:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // save customers data in the db in customersCollection
+    app.post("/customers", async (req, res) => {
+      try {
+        const newCustomer = req.body;
+        const email = newCustomer.email;
+
+        if (!email) {
+          return res.status(400).json({ message: "Email is required" });
+        }
+
+        // Check if customer already exists
+        const existingCustomer = await customersCollection.findOne({ email });
+
+        if (existingCustomer) {
+          return res.status(200).json({
+            message: "Customer already exists",
+            inserted: false,
+            existingCustomer,
+          });
+        }
+
+        // Insert new customer
+        const result = await customersCollection.insertOne(newCustomer);
+
+        res.send(result);
+      } catch (error) {
+        console.error("❌ Error saving customer:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
