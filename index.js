@@ -3,12 +3,19 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
 
+const admin = require("firebase-admin");
+
 const app = express();
 const port = process.env.PORT || 3000;
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const serviceAccount = require("./firbase_admin_key.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 // MongoDB URI from .env
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.bmunlsr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -25,10 +32,39 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-
     const db = client.db("trustLife_db");
     const policiesCollection = db.collection("policies");
     const customersCollection = db.collection("customers");
+
+    // create custom middleware to verify fb token
+    const verifyFBToken = async (req, res, next) => {
+      console.log("headers in middleware", req.headers);
+
+      // check headers
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+
+      // check tokens
+      const token = authHeader.split(" ")[1];
+      if (!token) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+
+      try {
+        const decoded = await admin.auth().verifyIdToken(token);
+        req.decoded = decoded;
+        next();
+      } catch (error) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      // todo: in server side all the get operation using email will also verified by this decoded like following from 25.12
+      /* console.log("decoded", req.decoded);
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      } */
+    };
 
     // save policies data to the db
     app.post("/policies", async (req, res) => {
@@ -45,9 +81,11 @@ async function run() {
     });
 
     // get all the policies to show in Ui
-    app.get("/policies", async (req, res) => {
+    app.get("/policies", verifyFBToken, async (req, res) => {
       try {
         const policies = await policiesCollection.find().toArray();
+        // for checking the decoded data in server
+        console.log("decoded", req.decoded);
         res.send(policies);
       } catch (error) {
         console.error("❌ Error fetching policies:", error);
