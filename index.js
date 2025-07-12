@@ -182,6 +182,30 @@ async function run() {
       }
     });
 
+    // api for get the role from the db
+    app.get("/customers/role/:email", async (req, res) => {
+      try {
+        const email = req.params.email;
+
+        if (!email) {
+          return res.status(400).json({ message: "Email is required" });
+        }
+
+        const customer = await customersCollection.findOne({ email });
+
+        if (!customer) {
+          return res.status(404).json({ message: "Customer not found" });
+        }
+
+        res.send({
+          role: customer.role || "customer",
+        });
+      } catch (error) {
+        console.error("❌ Error fetching customer role:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
     // Optional: Test ping
     await db.command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
