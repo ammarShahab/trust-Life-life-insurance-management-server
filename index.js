@@ -80,15 +80,56 @@ async function run() {
       }
     });
 
-    // get all the policies to show in Ui
+    // get all the policies to show in Ui for protected admin route
     app.get("/policies", verifyFBToken, async (req, res) => {
       try {
-        const policies = await policiesCollection.find().toArray();
         // for checking the decoded data in server
         console.log("decoded", req.decoded);
+        const policies = await policiesCollection.find().toArray();
+        res.send(policies);
+        /*  const { category } = req.query;
+        const query = category ? { category } : {};
+        const policies = await policiesCollection.find(query).toArray(); */
+        // res.send(policies);
+        res.json(policies);
+      } catch (error) {
+        console.error("❌ Error fetching policies:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // all policies for public route
+    app.get("/all-policies", async (req, res) => {
+      try {
+        const { category } = req.query;
+        const query = category ? { category } : {};
+        const policies = await policiesCollection.find(query).toArray();
         res.send(policies);
       } catch (error) {
         console.error("❌ Error fetching policies:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // get each policies details
+    app.get("/policies/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        if (!ObjectId.isValid(id)) {
+          return res.status(400).json({ message: "Invalid ID" });
+        }
+
+        const policy = await policiesCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        if (!policy) {
+          return res.status(404).json({ message: "Policy not found" });
+        }
+
+        res.status(200).json(policy);
+      } catch (error) {
+        console.error("❌ Error fetching policy by ID:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
@@ -151,7 +192,7 @@ async function run() {
       }
     });
 
-    // save customers data in the db in customersCollection
+    // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
       try {
         const newCustomer = req.body;
@@ -182,7 +223,7 @@ async function run() {
       }
     });
 
-    // api for get the role from the db
+    // api for get the role from the db for differentiate the dashboard home
     app.get("/customers/role/:email", async (req, res) => {
       try {
         const email = req.params.email;
