@@ -36,6 +36,7 @@ async function run() {
     const policiesCollection = db.collection("policies");
     const customersCollection = db.collection("customers");
     const applicationsCollection = db.collection("applications");
+    const reviewsCollection = db.collection("reviews");
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
@@ -300,6 +301,13 @@ async function run() {
         console.error("❌ Error fetching customer role:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
+    });
+
+    app.post("/reviews", async (req, res) => {
+      const reviewData = req.body;
+      console.log(reviewData);
+      const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
     });
 
     // Optional: Test ping
