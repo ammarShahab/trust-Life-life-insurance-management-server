@@ -221,6 +221,32 @@ async function run() {
       }
     });
 
+    // get the application that customer applied
+    app.get("/my-applications", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+
+        if (!email) {
+          return res.status(400).json({ message: "Email query is required" });
+        }
+
+        // ✅ Security check: ensure the requested email matches the authenticated user
+        if (req.decoded.email !== email) {
+          return res.status(403).json({ message: "Forbidden access" });
+        }
+
+        // ✅ Fetch applications for this email
+        const applications = await applicationsCollection
+          .find({ email })
+          .toArray();
+
+        res.send(applications);
+      } catch (error) {
+        console.error("❌ Failed to fetch customer applications:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
     // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
       try {
