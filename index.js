@@ -35,6 +35,7 @@ async function run() {
     const db = client.db("trustLife_db");
     const policiesCollection = db.collection("policies");
     const customersCollection = db.collection("customers");
+    const applicationsCollection = db.collection("applications");
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
@@ -188,6 +189,34 @@ async function run() {
         res.send(result);
       } catch (error) {
         console.error("❌ Error deleting policy:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    // save application to db
+    app.post("/policy-applications", verifyFBToken, async (req, res) => {
+      try {
+        const applicationData = req.body;
+        console.log(applicationData);
+
+        const { email, policyId } = applicationData;
+
+        const alreadyExists = await applicationsCollection.findOne({
+          email,
+          policyId,
+        });
+
+        if (alreadyExists) {
+          return res
+            .status(409)
+            .json({ message: "You already applied for this policy." });
+        }
+        // Insert into DB
+        const result = await applicationsCollection.insertOne(applicationData);
+
+        res.send(result);
+      } catch (error) {
+        console.error("❌ Error saving policy application:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
     });
