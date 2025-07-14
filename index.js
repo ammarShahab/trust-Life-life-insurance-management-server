@@ -38,6 +38,7 @@ async function run() {
     const customersCollection = db.collection("customers");
     const applicationsCollection = db.collection("applications");
     const reviewsCollection = db.collection("reviews");
+    const paymentsCollection = db.collection("payments");
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
@@ -348,6 +349,51 @@ async function run() {
         res.json({ clientSecret: paymentIntent.client_secret });
       } catch (error) {
         res.status(500).json({ error: error.message });
+      }
+    });
+
+    // creating payment history
+    app.post("/payments", verifyFBToken, async (req, res) => {
+      try {
+        const {
+          applicationId,
+          email,
+          amount,
+          transactionId,
+          paymentMethod,
+          paymentDuration,
+        } = req.body;
+
+        const paymentTime = new Date().toISOString();
+
+        // Update application payment status
+        const applicationUpdateResult = await applicationsCollection.updateOne(
+          { _id: new ObjectId(applicationId) },
+          { $set: { status: "Paid" } }
+        );
+
+        // Save payment history
+        const paymentData = {
+          parcelId,
+          email,
+          amount,
+          paymentMethod,
+          status,
+          paymentTime,
+          transactionId,
+          paymentDuration,
+        };
+
+        console.log(paymentRecord);
+
+        const paymentSaveResult = await paymentsCollection.insertOne(
+          paymentData
+        );
+
+        res.send(paymentSaveResult);
+      } catch (error) {
+        console.error("❌ Payment processing error:", error);
+        res.status(500).send({ error: "Payment failed" });
       }
     });
 
