@@ -1,7 +1,7 @@
-const express = require("express");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const cors = require("cors");
 require("dotenv").config();
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const express = require("express");
+const cors = require("cors");
 
 const admin = require("firebase-admin");
 
@@ -11,6 +11,7 @@ const port = process.env.PORT || 3000;
 // middleware
 app.use(cors());
 app.use(express.json());
+const stripe = require("stripe")(process.env.Stripe_Secret_Key);
 
 const serviceAccount = require("./firbase_admin_key.json");
 admin.initializeApp({
@@ -248,6 +249,35 @@ async function run() {
       }
     });
 
+    // get the specific application
+    app.get(
+      "/policy-applications/:applicationId",
+      verifyFBToken,
+      async (req, res) => {
+        try {
+          const id = req.params.applicationId;
+          console.log("application id", id);
+
+          if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid application ID" });
+          }
+
+          const application = await applicationsCollection.findOne({
+            _id: new ObjectId(id),
+          });
+
+          if (!application) {
+            return res.status(404).json({ message: "Application not found" });
+          }
+
+          res.send(application);
+        } catch (error) {
+          console.error("❌ Error fetching application:", error);
+          res.status(500).json({ message: "Internal Server Error" });
+        }
+      }
+    );
+
     // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
       try {
@@ -300,6 +330,24 @@ async function run() {
       } catch (error) {
         console.error("❌ Error fetching customer role:", error);
         res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    app.post("/create-payment-intent", async (req, res) => {
+      const { amount, paymentDuration } = req.body;
+      // const paymentDuration = req.body.paymentDuration;
+      console.log(paymentDuration);
+
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount,
+          currency: "usd",
+          payment_method_types: ["card"],
+        });
+
+        res.json({ clientSecret: paymentIntent.client_secret });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
       }
     });
 
