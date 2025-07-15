@@ -357,6 +357,7 @@ async function run() {
       try {
         const {
           policyTitle,
+          policyId,
           applicationId,
           email,
           amount,
@@ -376,6 +377,15 @@ async function run() {
           { $set: { status: "paid" } }
         );
 
+        const policyUpdateResult = await policiesCollection.updateOne(
+          { _id: new ObjectId(policyId) },
+          {
+            $inc: {
+              purchasedCount: 1,
+            },
+          }
+        );
+
         const updatedApplication = await applicationsCollection.findOne({
           _id: new ObjectId(applicationId),
         });
@@ -383,6 +393,7 @@ async function run() {
         // Save payment history
         const paymentData = {
           policyTitle,
+          policyId,
           applicationId,
           email,
           amount,
