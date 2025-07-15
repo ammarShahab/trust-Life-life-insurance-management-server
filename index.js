@@ -341,7 +341,7 @@ async function run() {
 
       try {
         const paymentIntent = await stripe.paymentIntents.create({
-          amount,
+          amount: amount,
           currency: "usd",
           payment_method_types: ["card"],
         });
@@ -362,6 +362,7 @@ async function run() {
           transactionId,
           paymentMethod,
           paymentDuration,
+          status,
         } = req.body;
 
         const paymentTime = new Date().toISOString();
@@ -369,12 +370,12 @@ async function run() {
         // Update application payment status
         const applicationUpdateResult = await applicationsCollection.updateOne(
           { _id: new ObjectId(applicationId) },
-          { $set: { status: "Paid" } }
+          { $set: { status: "paid" } }
         );
 
         // Save payment history
         const paymentData = {
-          parcelId,
+          applicationId,
           email,
           amount,
           paymentMethod,
@@ -384,7 +385,7 @@ async function run() {
           paymentDuration,
         };
 
-        console.log(paymentRecord);
+        console.log(paymentData);
 
         const paymentSaveResult = await paymentsCollection.insertOne(
           paymentData
