@@ -356,6 +356,7 @@ async function run() {
     app.post("/payments", verifyFBToken, async (req, res) => {
       try {
         const {
+          policyTitle,
           applicationId,
           email,
           amount,
@@ -365,6 +366,8 @@ async function run() {
           status,
         } = req.body;
 
+        console.log(req.body);
+
         const paymentTime = new Date().toISOString();
 
         // Update application payment status
@@ -373,13 +376,18 @@ async function run() {
           { $set: { status: "paid" } }
         );
 
+        const updatedApplication = await applicationsCollection.findOne({
+          _id: new ObjectId(applicationId),
+        });
+
         // Save payment history
         const paymentData = {
+          policyTitle,
           applicationId,
           email,
           amount,
           paymentMethod,
-          status,
+          status: updatedApplication?.status || "paid",
           paymentTime,
           transactionId,
           paymentDuration,
