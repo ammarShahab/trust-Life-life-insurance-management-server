@@ -301,6 +301,84 @@ async function run() {
       }
     });
 
+    // Get all agents from customers collection
+    app.get("/agents", verifyFBToken, async (req, res) => {
+      try {
+        const agents = await customersCollection
+          .find({ role: "agent" })
+          .project({ customerName: 1, email: 1, _id: 0 })
+          .toArray();
+        res.send(agents);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
+    // Assign an agent and update application status to approved
+    app.patch(
+      "/policy-applications/:id/assign-agent",
+      verifyFBToken,
+      async (req, res) => {
+        const applicationId = req.params.id;
+        const { agentName, agentEmail } = req.body;
+
+        try {
+          const result = await applicationsCollection.updateOne(
+            { _id: new ObjectId(applicationId) },
+            {
+              $set: {
+                status: "approved",
+                agentName,
+                agentEmail,
+              },
+            }
+          );
+
+          if (result.modifiedCount > 0) {
+            res.send({
+              success: true,
+              message: "Agent assigned successfully.",
+            });
+          } else {
+            res
+              .status(404)
+              .send({ success: false, message: "Application not found." });
+          }
+        } catch (error) {
+          console.error("❌ Failed to assign agent:", error);
+          res.status(500).send({ success: false, message: "Server error" });
+        }
+      }
+    );
+
+    // Reject the application and update status to rejected
+    app.patch(
+      "/policy-applications/:id/reject",
+      verifyFBToken,
+      async (req, res) => {
+        const applicationId = req.params.id;
+
+        try {
+          const result = await applicationsCollection.updateOne(
+            { _id: new ObjectId(applicationId) },
+            { $set: { status: "rejected" } }
+          );
+
+          if (result.modifiedCount > 0) {
+            res.send({ success: true, message: "Application rejected." });
+          } else {
+            res
+              .status(404)
+              .send({ success: false, message: "Application not found." });
+          }
+        } catch (error) {
+          console.error("❌ Error rejecting application:", error);
+          res.status(500).send({ success: false, message: "Server error" });
+        }
+      }
+    );
+
     // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
       try {
