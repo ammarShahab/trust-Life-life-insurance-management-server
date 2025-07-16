@@ -47,7 +47,9 @@ async function run() {
       // check headers
       const authHeader = req.headers.authorization;
       if (!authHeader) {
-        return res.status(401).send({ message: "unauthorized access" });
+        return res
+          .status(401)
+          .send({ message: "unauthorized access: No Token" });
       }
 
       // check tokens
@@ -59,9 +61,11 @@ async function run() {
       try {
         const decoded = await admin.auth().verifyIdToken(token);
         req.decoded = decoded;
+        console.log("✅ Firebase decoded token:", decoded);
+
         next();
       } catch (error) {
-        return res.status(403).send({ message: "forbidden access" });
+        return res.status(403).send({ message: "Forbidden: Invalid token" });
       }
       // todo: in server side all the get operation using email will also verified by this decoded like following from 25.12
       /* console.log("decoded", req.decoded);
@@ -278,6 +282,24 @@ async function run() {
         }
       }
     );
+
+    // ✅ Get all PAID applications (for ManageApplications table)
+    app.get("/applications/paid", verifyFBToken, async (req, res) => {
+      try {
+        const paidApplications = await applicationsCollection
+          .find({ status: "paid" })
+          .toArray();
+        console.log(
+          "paidApplication from /applications/paid routes",
+          paidApplications
+        );
+
+        res.send(paidApplications);
+      } catch (error) {
+        console.error("❌ Error fetching paid applications:", error);
+        res.status(500).send({ error: "Failed to fetch applications" });
+      }
+    });
 
     // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
