@@ -479,6 +479,70 @@ async function run() {
       }
     });
 
+    // get all the users
+    app.get("/users", verifyFBToken, async (req, res) => {
+      try {
+        const users = await customersCollection.find().toArray();
+        res.send(users);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to fetch users" });
+      }
+    });
+
+    app.patch("/users/:id/promote", verifyFBToken, async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await customersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role: "agent" } }
+        );
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to promote user" });
+      }
+    });
+
+    // promote a customer to agent
+    app.patch("/users/:id/promote", verifyFBToken, async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await customersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role: "agent" } }
+        );
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to promote user" });
+      }
+    });
+
+    // demote agent to customer
+    app.patch("/users/:id/demote", verifyFBToken, async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await customersCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role: "customer" } }
+        );
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to demote user" });
+      }
+    });
+
+    // delete a customer
+    app.delete("/users/:id", verifyFBToken, async (req, res) => {
+      const { id } = req.params;
+      try {
+        const result = await customersCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to delete user" });
+      }
+    });
+
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
       // const paymentDuration = req.body.paymentDuration;
