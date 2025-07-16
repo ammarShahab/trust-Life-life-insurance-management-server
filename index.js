@@ -331,6 +331,7 @@ async function run() {
                 status: "approved",
                 agentName,
                 agentEmail,
+                agent_status: "pending",
               },
             }
           );
