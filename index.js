@@ -380,6 +380,50 @@ async function run() {
       }
     );
 
+    //get the Assigned Applications by Agent Email
+    app.get("/assigned-applications", verifyFBToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+        const assigned = await applicationsCollection
+          .find({ agentEmail: email })
+          .toArray();
+        res.send(assigned);
+      } catch (error) {
+        console.error("Failed to fetch assigned applications:", error);
+        res.status(500).send({ error: "Internal Server Error" });
+      }
+    });
+
+    // Update Agent Status & Increment Purchase Count
+    app.patch(
+      "/assigned-applications/:id/update-status",
+      verifyFBToken,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+          const { agent_status, policyId } = req.body;
+
+          const result = await applicationsCollection.updateOne(
+            { _id: new ObjectId(id) },
+            { $set: { agent_status } }
+          );
+
+          // If approved, increment purchasedCount in policies collection
+          if (agent_status === "approved") {
+            await policiesCollection.updateOne(
+              { _id: new ObjectId(policyId) },
+              { $inc: { purchasedCount: 1 } }
+            );
+          }
+
+          res.send({ success: true, updated: result.modifiedCount > 0 });
+        } catch (error) {
+          console.error("Failed to update status:", error);
+          res.status(500).send({ error: "Internal Server Error" });
+        }
+      }
+    );
+
     // save customers data in the db in customersCollection during registration
     app.post("/customers", async (req, res) => {
       try {
@@ -478,14 +522,14 @@ async function run() {
           { $set: { status: "paid" } }
         );
 
-        const policyUpdateResult = await policiesCollection.updateOne(
+        /*  const policyUpdateResult = await policiesCollection.updateOne(
           { _id: new ObjectId(policyId) },
           {
             $inc: {
               purchasedCount: 1,
             },
           }
-        );
+        ); */
 
         const updatedApplication = await applicationsCollection.findOne({
           _id: new ObjectId(applicationId),
