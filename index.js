@@ -489,19 +489,6 @@ async function run() {
       }
     });
 
-    app.patch("/users/:id/promote", verifyFBToken, async (req, res) => {
-      const { id } = req.params;
-      try {
-        const result = await customersCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: { role: "agent" } }
-        );
-        res.send(result);
-      } catch (err) {
-        res.status(500).send({ error: "Failed to promote user" });
-      }
-    });
-
     // promote a customer to agent
     app.patch("/users/:id/promote", verifyFBToken, async (req, res) => {
       const { id } = req.params;
@@ -623,6 +610,32 @@ async function run() {
       } catch (error) {
         console.error("❌ Payment processing error:", error);
         res.status(500).send({ error: "Payment failed" });
+      }
+    });
+
+    // GET: All Stripe-based payments with total income
+    /*  app.get("/transactions", verifyFBToken, async (req, res) => {
+      try {
+        const payments = await paymentsCollection.find({}).toArray();
+
+        const totalIncome = payments
+          .filter((p) => p.status === "paid")
+          .reduce((sum, p) => sum + Number(p.amount), 0);
+
+        res.send({ payments, totalIncome });
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+        res.status(500).send({ error: "Failed to fetch transactions" });
+      }
+    }); */
+
+    app.get("/transactions", verifyFBToken, async (req, res) => {
+      try {
+        const payments = await paymentsCollection.find().toArray();
+        res.send(payments);
+      } catch (error) {
+        console.error("Error fetching payments:", error);
+        res.status(500).send({ error: "Failed to fetch payments" });
       }
     });
 
