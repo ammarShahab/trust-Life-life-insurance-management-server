@@ -480,7 +480,7 @@ async function run() {
     });
 
     // get all the users
-    app.get("/users", verifyFBToken, async (req, res) => {
+    app.get("/customers", verifyFBToken, async (req, res) => {
       try {
         const users = await customersCollection.find().toArray();
         res.send(users);
@@ -490,7 +490,7 @@ async function run() {
     });
 
     // promote a customer to agent
-    app.patch("/users/:id/promote", verifyFBToken, async (req, res) => {
+    app.patch("/customers/:id/promote", verifyFBToken, async (req, res) => {
       const { id } = req.params;
       try {
         const result = await customersCollection.updateOne(
@@ -504,7 +504,7 @@ async function run() {
     });
 
     // demote agent to customer
-    app.patch("/users/:id/demote", verifyFBToken, async (req, res) => {
+    app.patch("/customers/:id/demote", verifyFBToken, async (req, res) => {
       const { id } = req.params;
       try {
         const result = await customersCollection.updateOne(
@@ -518,7 +518,7 @@ async function run() {
     });
 
     // delete a customer
-    app.delete("/users/:id", verifyFBToken, async (req, res) => {
+    app.delete("/customers/:id", verifyFBToken, async (req, res) => {
       const { id } = req.params;
       try {
         const result = await customersCollection.deleteOne({
