@@ -39,6 +39,7 @@ async function run() {
     const applicationsCollection = db.collection("applications");
     const reviewsCollection = db.collection("reviews");
     const paymentsCollection = db.collection("payments");
+    const blogsCollection = db.collection("blogs");
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
@@ -530,6 +531,65 @@ async function run() {
       }
     });
 
+    // POST: Create a new blog
+    app.post("/blogs", verifyFBToken, async (req, res) => {
+      const blog = req.body;
+      blog.publishDate = new Date(); // Auto timestamp
+      const result = await blogsCollection.insertOne(blog);
+      res.send(result);
+    });
+
+    // GET blogs (for admin or specific user)
+    app.get("/blogs", verifyFBToken, async (req, res) => {
+      const email = req.query.email;
+      const customer = await customersCollection.findOne({ email });
+
+      const query = customer?.role === "admin" ? {} : { authorEmail: email };
+      const blogs = await blogsCollection
+        .find(query)
+        .sort({ publishDate: -1 })
+        .toArray();
+      res.send(blogs);
+    });
+
+    // Update blog by ID
+    app.put("/blogs/:id", verifyFBToken, async (req, res) => {
+      try {
+        const blogId = req.params.id;
+        const updatedBlogData = req.body;
+
+        const result = await blogsCollection.updateOne(
+          { _id: new ObjectId(blogId) },
+          {
+            $set: {
+              title: updatedBlogData.title,
+              content: updatedBlogData.content,
+              imageUrl: updatedBlogData.imageUrl,
+              publishDate: new Date().toISOString(),
+            },
+          }
+        );
+
+        if (result.modifiedCount === 1) {
+          res.status(200).send({ message: "Blog updated successfully" });
+        } else {
+          res
+            .status(404)
+            .send({ message: "Blog not found or already up to date" });
+        }
+      } catch (error) {
+        console.error("Error updating blog:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
+    // DELETE blog
+    app.delete("/blogs/:id", verifyFBToken, async (req, res) => {
+      const id = req.params.id;
+      const result = await blogsCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
       // const paymentDuration = req.body.paymentDuration;
@@ -573,15 +633,6 @@ async function run() {
           { $set: { status: "paid" } }
         );
 
-        /*  const policyUpdateResult = await policiesCollection.updateOne(
-          { _id: new ObjectId(policyId) },
-          {
-            $inc: {
-              purchasedCount: 1,
-            },
-          }
-        ); */
-
         const updatedApplication = await applicationsCollection.findOne({
           _id: new ObjectId(applicationId),
         });
@@ -612,22 +663,6 @@ async function run() {
         res.status(500).send({ error: "Payment failed" });
       }
     });
-
-    // GET: All Stripe-based payments with total income
-    /*  app.get("/transactions", verifyFBToken, async (req, res) => {
-      try {
-        const payments = await paymentsCollection.find({}).toArray();
-
-        const totalIncome = payments
-          .filter((p) => p.status === "paid")
-          .reduce((sum, p) => sum + Number(p.amount), 0);
-
-        res.send({ payments, totalIncome });
-      } catch (error) {
-        console.error("Error fetching transactions:", error);
-        res.status(500).send({ error: "Failed to fetch transactions" });
-      }
-    }); */
 
     app.get("/transactions", verifyFBToken, async (req, res) => {
       try {
