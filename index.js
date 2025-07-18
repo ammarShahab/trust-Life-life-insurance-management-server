@@ -562,6 +562,37 @@ async function run() {
       }
     });
 
+    // Increment Visit Count by +1 by customer
+    app.patch("/blogs/visit/:id", async (req, res) => {
+      try {
+        const blogId = req.params.id;
+        const result = await blogsCollection.updateOne(
+          { _id: new ObjectId(blogId) },
+          { $inc: { totalVisit: 1 } }
+        );
+        res.send(result);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to update visit count." });
+      }
+    });
+
+    //blog details api for except customer /blogs/:id.
+    app.get("/blogs/:id", async (req, res) => {
+      const id = req.params.id;
+
+      try {
+        const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
+
+        if (blog) {
+          res.send(blog);
+        } else {
+          res.status(404).send({ message: "Blog not found" });
+        }
+      } catch (err) {
+        res.status(500).send({ message: "Failed to fetch blog", error: err });
+      }
+    });
+
     // Update blog by ID
     app.put("/blogs/:id", verifyFBToken, async (req, res) => {
       try {
