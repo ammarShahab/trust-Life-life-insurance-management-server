@@ -552,6 +552,16 @@ async function run() {
       res.send(blogs);
     });
 
+    // Get All Blogs
+    app.get("/all-blogs", async (req, res) => {
+      try {
+        const blogs = await blogsCollection.find().toArray();
+        res.send(blogs);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to fetch blogs." });
+      }
+    });
+
     // Update blog by ID
     app.put("/blogs/:id", verifyFBToken, async (req, res) => {
       try {
