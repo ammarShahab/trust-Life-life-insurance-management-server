@@ -656,6 +656,7 @@ async function run() {
         try {
           const { applicationId } = req.params;
           const { claim_reason, claim_document } = req.body;
+          console.log("claim doc", claim_document);
 
           const result = await applicationsCollection.updateOne(
             { _id: new ObjectId(applicationId) },
@@ -674,6 +675,90 @@ async function run() {
         }
       }
     );
+
+    // GET - agent Get applications claimed by customer
+    app.get("/claim-requests", async (req, res) => {
+      try {
+        const agentEmail = req.query.agentEmail;
+
+        const result = await applicationsCollection
+          .aggregate([
+            {
+              $match: {
+                agentEmail,
+                claim_status: "claimed",
+              },
+            },
+            {
+              $addFields: {
+                applicationObjectId: { $toObjectId: "$_id" },
+                policyObjectId: { $toObjectId: "$policyId" },
+              },
+            },
+            {
+              $lookup: {
+                from: "paymentsCollection",
+                localField: "applicationObjectId",
+                foreignField: "applicationId",
+                as: "paymentInfo",
+              },
+            },
+            {
+              $lookup: {
+                from: "policiesCollection",
+                localField: "policyObjectId",
+                foreignField: "_id",
+                as: "policyInfo",
+              },
+            },
+            {
+              $unwind: {
+                path: "$paymentInfo",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $unwind: {
+                path: "$policyInfo",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $project: {
+                name: 1,
+                email: 1,
+                policyTitle: 1,
+                policyId: 1,
+                claim_status: 1,
+                claim_reason: 1,
+                claim_document: 1,
+                amount: "$paymentInfo.amount",
+                policyInfo: 1,
+              },
+            },
+          ])
+          .toArray();
+
+        res.send(result);
+      } catch (err) {
+        console.error("Aggregation error:", err);
+        res.status(500).send({ error: "Failed to fetch claim requests" });
+      }
+    });
+
+    // GET - Get applications claimed by customer
+    /*  app.get("/applications/claimed", async (req, res) => {
+      try {
+        const { agentEmail } = req.query;
+        const data = await applicationsCollection
+          .find({ agentEmail, claim_status: "claimed" })
+          .toArray();
+
+        res.send(data);
+      } catch (err) {
+        res.status(500).send({ error: "Failed to fetch agent applications" });
+      }
+    }); */
 
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
