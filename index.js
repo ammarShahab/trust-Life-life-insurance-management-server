@@ -649,27 +649,31 @@ async function run() {
     });
 
     // Update claim fields for a specific application
-    app.patch("/claim-request/:id", verifyFBToken, async (req, res) => {
-      try {
-        const { id } = req.params;
-        const { claim_reason, claim_document } = req.body;
+    app.patch(
+      "/claim-request/:applicationId",
+      verifyFBToken,
+      async (req, res) => {
+        try {
+          const { applicationId } = req.params;
+          const { claim_reason, claim_document } = req.body;
 
-        const result = await applicationsCollection.updateOne(
-          { _id: new ObjectId(id) },
-          {
-            $set: {
-              claim_reason,
-              claim_document,
-              claim_status: "claimed",
-            },
-          }
-        );
+          const result = await applicationsCollection.updateOne(
+            { _id: new ObjectId(applicationId) },
+            {
+              $set: {
+                claim_reason,
+                claim_document,
+                claim_status: "claimed",
+              },
+            }
+          );
 
-        res.send(result);
-      } catch (err) {
-        res.status(500).send({ error: "Failed to submit claim" });
+          res.send(result);
+        } catch (err) {
+          res.status(500).send({ error: "Failed to submit claim" });
+        }
       }
-    });
+    );
 
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
