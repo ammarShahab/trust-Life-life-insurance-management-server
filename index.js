@@ -120,6 +120,21 @@ async function run() {
       }
     });
 
+    // Get popular policies
+    // GET top 6 most purchased policies
+    app.get("/popular-policies", async (req, res) => {
+      try {
+        const result = await policiesCollection
+          .find({})
+          .sort({ purchasedCount: -1 })
+          .limit(6)
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch popular policies" });
+      }
+    });
+
     // get each policies details
     app.get("/policies/:id", async (req, res) => {
       try {
