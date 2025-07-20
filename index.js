@@ -577,6 +577,21 @@ async function run() {
       }
     });
 
+    // get the latest blog by publishDate
+    app.get("/blog-latest", async (req, res) => {
+      try {
+        const latestBlogs = await blogsCollection
+          .find({})
+          .sort({ publishDate: -1 }) // newest first
+          .limit(4)
+          .toArray();
+
+        res.status(200).json(latestBlogs);
+      } catch (error) {
+        res.status(500).json({ error: "Failed to fetch latest blogs" });
+      }
+    });
+
     // Increment Visit Count by +1 by customer
     app.patch("/blogs/visit/:id", async (req, res) => {
       try {
