@@ -471,6 +471,23 @@ async function run() {
       }
     });
 
+    // customer update last login
+    app.put("/customer/update-last-login", verifyFBToken, async (req, res) => {
+      const { email, lastSignInTime } = req.body;
+
+      if (!email || !lastSignInTime) {
+        return res.status(400).json({ message: "Missing fields" });
+      }
+
+      const result = await customersCollection.updateOne(
+        { email },
+        { $set: { lastSignInTime } },
+        { upsert: true }
+      );
+
+      res.send({ success: true, result });
+    });
+
     // api for get the role from the db for differentiate the dashboard home
     app.get("/customers/role/:email", async (req, res) => {
       try {
