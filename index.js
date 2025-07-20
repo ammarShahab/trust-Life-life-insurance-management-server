@@ -782,152 +782,6 @@ async function run() {
       }
     });
 
-    // Agent-side claim approval API
-    /*  app.get("/claim-requests", async (req, res) => {
-      try {
-        const agentEmail = req.query.agentEmail;
-
-        const result = await applicationsCollection
-          .aggregate([
-            {
-              $match: {
-                agentEmail,
-                claim_status: "claimed",
-              },
-            },
-            {
-              $lookup: {
-                from: "paymentsCollection",
-                let: { appIdStr: { $toString: "$_id" } },
-                pipeline: [
-                  {
-                    $match: {
-                      $expr: { $eq: ["$applicationId", "$$appIdStr"] },
-                    },
-                  },
-                ],
-                as: "paymentInfo",
-              },
-            },
-            {
-              $lookup: {
-                from: "policiesCollection",
-                let: { policyIdObj: { $toObjectId: "$policyId" } },
-                pipeline: [
-                  {
-                    $match: {
-                      $expr: { $eq: ["$_id", "$$policyIdObj"] },
-                    },
-                  },
-                ],
-                as: "policyInfo",
-              },
-            },
-            {
-              $unwind: {
-                path: "$paymentInfo",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $unwind: {
-                path: "$policyInfo",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                name: 1,
-                email: 1,
-                policyTitle: 1,
-                policyId: 1,
-                claim_status: 1,
-                claim_reason: 1,
-                claim_document: 1,
-                agentName: 1,
-                amount: "$paymentInfo.amount",
-                paymentMethod: "$paymentInfo.paymentMethod",
-                policyInfo: 1,
-              },
-            },
-          ])
-          .toArray();
-
-        res.send(result);
-      } catch (error) {
-        console.error("Error in /claim-requests:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      }
-    }); */
-
-    /* app.get("/claim-requests", async (req, res) => {
-      try {
-        const agentEmail = req.query.agentEmail;
-
-        const result = await applicationsCollection
-          .aggregate([
-            {
-              $match: {
-                agentEmail,
-                claim_status: "claimed",
-              },
-            },
-            {
-              $addFields: {
-                policyObjectId: { $toObjectId: "$policyId" },
-              },
-            },
-            {
-              $lookup: {
-                from: "paymentsCollection",
-                localField: "_id", // string
-                foreignField: "applicationId", // also string
-                as: "paymentInfo",
-              },
-            },
-            {
-              $lookup: {
-                from: "policiesCollection",
-                localField: "policyObjectId",
-                foreignField: "_id",
-                as: "policyInfo",
-              },
-            },
-            {
-              $unwind: {
-                path: "$paymentInfo",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $unwind: {
-                path: "$policyInfo",
-                preserveNullAndEmptyArrays: true,
-              },
-            },
-            {
-              $project: {
-                name: 1,
-                email: 1,
-                policyTitle: 1,
-                policyId: 1,
-                claim_status: 1,
-                claim_reason: 1,
-                claim_document: 1,
-                amount: "$paymentInfo.amount",
-                policyInfo: 1,
-              },
-            },
-          ])
-          .toArray();
-
-        res.send(result);
-      } catch (err) {
-        console.error("Aggregation error:", err);
-        res.status(500).send({ error: "Failed to fetch claim requests" });
-      }
-    }); */
-
     // GET - Get applications claimed by customer
     /*  app.get("/applications/claimed", async (req, res) => {
       try {
@@ -1030,6 +884,12 @@ async function run() {
       const reviewData = req.body;
       console.log(reviewData);
       const result = await reviewsCollection.insertOne(reviewData);
+      res.send(result);
+    });
+
+    // get all reviews by customer
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
       res.send(result);
     });
 
