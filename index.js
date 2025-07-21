@@ -471,6 +471,27 @@ async function run() {
       }
     });
 
+    // Fetch user by email
+    app.get("/customers/:email", verifyFBToken, async (req, res) => {
+      const email = req.params.email;
+      const user = await customersCollection.findOne({ email });
+      res.send(user);
+    });
+
+    // PUT: Update profile
+    app.put("/customers/:email", verifyFBToken, async (req, res) => {
+      const email = req.params.email;
+      const { customerName, photoURL } = req.body;
+
+      const result = await customersCollection.updateOne(
+        { email },
+        { $set: { customerName, photoURL } },
+        { upsert: true }
+      );
+
+      res.send(result);
+    });
+
     // customer update last login
     app.put("/customer/update-last-login", verifyFBToken, async (req, res) => {
       const { email, lastSignInTime } = req.body;
