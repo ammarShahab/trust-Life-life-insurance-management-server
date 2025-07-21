@@ -106,7 +106,7 @@ async function run() {
     });
 
     // all policies for public route
-    app.get("/all-policies", async (req, res) => {
+    /* app.get("/all-policies", async (req, res) => {
       try {
         const { category, search } = req.query;
 
@@ -128,19 +128,40 @@ async function run() {
         console.error("❌ Error fetching policies:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
-    });
-
-    /* app.get("/all-policies", async (req, res) => {
-      try {
-        const { category } = req.query;
-        const query = category ? { category } : {};
-        const policies = await policiesCollection.find(query).toArray();
-        res.send(policies);
-      } catch (error) {
-        console.error("❌ Error fetching policies:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      }
     }); */
+
+    // Backend route: GET /all-policies
+    app.get("/all-policies", async (req, res) => {
+      try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 9;
+        const skip = (page - 1) * limit;
+
+        const category = req.query.category;
+        const search = req.query.search;
+
+        const filter = {};
+
+        if (category && category !== "all") {
+          filter.category = category;
+        }
+
+        if (search) {
+          filter.title = { $regex: search, $options: "i" };
+        }
+
+        const total = await policiesCollection.countDocuments(filter);
+        const policies = await policiesCollection
+          .find(filter)
+          .skip(skip)
+          .limit(limit)
+          .toArray();
+
+        res.send({ policies, total });
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch policies" });
+      }
+    });
 
     // Get popular policies
     // GET top 6 most purchased policies
