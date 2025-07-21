@@ -70,10 +70,7 @@ async function run() {
         return res.status(403).send({ message: "Forbidden: Invalid token" });
       }
       // todo: in server side all the get operation using email will also verified by this decoded like following from 25.12
-      /* console.log("decoded", req.decoded);
-      if (req.decoded.email !== email) {
-        return res.status(403).send({ message: "forbidden access" });
-      } */
+      console.log("decoded", req.decoded);
     };
 
     // save policies data to the db
@@ -160,7 +157,7 @@ async function run() {
     });
 
     // update policies
-    app.patch("/policies/:id", async (req, res) => {
+    app.patch("/policies/:id", verifyFBToken, async (req, res) => {
       try {
         const id = req.params.id;
         const updatedPolicy = req.body;
@@ -193,7 +190,7 @@ async function run() {
     });
 
     // Delete policies
-    app.delete("/policies/:id", async (req, res) => {
+    app.delete("/policies/:id", verifyFBToken, async (req, res) => {
       try {
         const id = req.params.id;
 
@@ -252,6 +249,10 @@ async function run() {
 
         if (!email) {
           return res.status(400).json({ message: "Email query is required" });
+        }
+
+        if (req.decoded.email !== email) {
+          return res.status(403).send({ message: "forbidden access" });
         }
 
         // ✅ Security check: ensure the requested email matches the authenticated user
@@ -415,6 +416,11 @@ async function run() {
     app.get("/assigned-applications", verifyFBToken, async (req, res) => {
       try {
         const email = req.query.email;
+
+        if (req.decoded.email !== email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+
         const assigned = await applicationsCollection
           .find({ agentEmail: email })
           .toArray();
@@ -489,6 +495,11 @@ async function run() {
     // Fetch user by email
     app.get("/customers/:email", verifyFBToken, async (req, res) => {
       const email = req.params.email;
+
+      if (req.decoded.email !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
       const user = await customersCollection.findOne({ email });
       res.send(user);
     });
@@ -526,12 +537,16 @@ async function run() {
  */
 
     // api for get the role from the db for differentiate the dashboard home
-    app.get("/customers/role/:email", async (req, res) => {
+    app.get("/customers/role/:email", verifyFBToken, async (req, res) => {
       try {
         const email = req.params.email;
 
         if (!email) {
           return res.status(400).json({ message: "Email is required" });
+        }
+
+        if (req.decoded.email !== email) {
+          return res.status(403).send({ message: "forbidden access" });
         }
 
         const customer = await customersCollection.findOne({ email });
@@ -720,6 +735,10 @@ async function run() {
       try {
         const email = req.query.email;
 
+        if (req.decoded.email !== email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+
         const result = await applicationsCollection
           .find({ email, agent_status: "approved" })
           .toArray();
@@ -888,6 +907,10 @@ async function run() {
 
         const paymentTime = new Date().toISOString();
 
+        if (req.decoded.email !== email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
+
         // Update application payment status
         const applicationUpdateResult = await applicationsCollection.updateOne(
           { _id: new ObjectId(applicationId) },
@@ -935,7 +958,7 @@ async function run() {
       }
     });
 
-    app.post("/reviews", async (req, res) => {
+    app.post("/reviews", verifyFBToken, async (req, res) => {
       const reviewData = req.body;
       console.log(reviewData);
       const result = await reviewsCollection.insertOne(reviewData);
