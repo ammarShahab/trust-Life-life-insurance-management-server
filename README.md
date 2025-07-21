@@ -46,10 +46,11 @@ All payments are securely processed using Stripe. Payment-related routes use the
 ```
 
 🔌 Available Routes (Example)
-Method Endpoint Description
-GET /policies Get all insurance policies
-POST /policy-applications Apply for an insurance policy
-PATCH /policy-applications/:id Update application (assign agent)
-GET /payments Get all payments (admin)
-POST /create-payment-intent Create Stripe payment intent
-GET /limited-agents Fetch trusted agent list
+
+- Method Endpoint Description
+- GET /policies Get all insurance policies
+- POST /policy-applications Apply for an insurance policy
+- PATCH /policy-applications/:id Update application (assign agent)
+- GET /payments Get all payments (admin)
+- POST /create-payment-intent Create Stripe payment intent
+- GET /limited-agents Fetch trusted agent list
