@@ -332,6 +332,20 @@ async function run() {
       }
     });
 
+    app.get("/limited-agents", async (req, res) => {
+      try {
+        const agents = await customersCollection
+          .find({ role: "agent" })
+          .project({ customerName: 1, email: 1, photoURL: 1, _id: 0 })
+          .limit(3)
+          .toArray();
+        res.send(agents);
+      } catch (error) {
+        console.error("Error fetching agents:", error);
+        res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
     // Assign an agent and update application status to approved
     app.patch(
       "/policy-applications/:id/assign-agent",
@@ -494,7 +508,7 @@ async function run() {
     });
 
     // customer update last login
-    app.put("/customer/update-last-login", verifyFBToken, async (req, res) => {
+    /* app.put("/customer/update-last-login", verifyFBToken, async (req, res) => {
       const { email, lastSignInTime } = req.body;
 
       if (!email || !lastSignInTime) {
@@ -509,6 +523,7 @@ async function run() {
 
       res.send({ success: true, result });
     });
+ */
 
     // api for get the role from the db for differentiate the dashboard home
     app.get("/customers/role/:email", async (req, res) => {
@@ -724,7 +739,7 @@ async function run() {
       async (req, res) => {
         try {
           const { applicationId } = req.params;
-          const { claim_reason, claim_document } = req.body;
+          const { claim_reason, claim_document, claim_status } = req.body;
           console.log("claim doc", claim_document);
 
           const result = await applicationsCollection.updateOne(
@@ -733,7 +748,7 @@ async function run() {
               $set: {
                 claim_reason,
                 claim_document,
-                claim_status: "claimed",
+                claim_status,
               },
             }
           );
