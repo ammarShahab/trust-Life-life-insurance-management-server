@@ -108,6 +108,30 @@ async function run() {
     // all policies for public route
     app.get("/all-policies", async (req, res) => {
       try {
+        const { category, search } = req.query;
+
+        const query = {};
+
+        // Filter by category
+        if (category) {
+          query.category = category;
+        }
+
+        // Search by title using case-insensitive regex
+        if (search) {
+          query.title = { $regex: search, $options: "i" }; // 'i' = case-insensitive
+        }
+
+        const policies = await policiesCollection.find(query).toArray();
+        res.send(policies);
+      } catch (error) {
+        console.error("❌ Error fetching policies:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+      }
+    });
+
+    /* app.get("/all-policies", async (req, res) => {
+      try {
         const { category } = req.query;
         const query = category ? { category } : {};
         const policies = await policiesCollection.find(query).toArray();
@@ -116,7 +140,7 @@ async function run() {
         console.error("❌ Error fetching policies:", error);
         res.status(500).json({ message: "Internal Server Error" });
       }
-    });
+    }); */
 
     // Get popular policies
     // GET top 6 most purchased policies
