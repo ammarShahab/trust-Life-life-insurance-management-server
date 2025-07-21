@@ -40,6 +40,7 @@ async function run() {
     const reviewsCollection = db.collection("reviews");
     const paymentsCollection = db.collection("payments");
     const blogsCollection = db.collection("blogs");
+    const newslettersCollection = db.collection("newsletters");
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
@@ -835,20 +836,6 @@ async function run() {
       }
     });
 
-    // GET - Get applications claimed by customer
-    /*  app.get("/applications/claimed", async (req, res) => {
-      try {
-        const { agentEmail } = req.query;
-        const data = await applicationsCollection
-          .find({ agentEmail, claim_status: "claimed" })
-          .toArray();
-
-        res.send(data);
-      } catch (err) {
-        res.status(500).send({ error: "Failed to fetch agent applications" });
-      }
-    }); */
-
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
       // const paymentDuration = req.body.paymentDuration;
@@ -944,6 +931,30 @@ async function run() {
     app.get("/reviews", async (req, res) => {
       const result = await reviewsCollection.find().toArray();
       res.send(result);
+    });
+
+    // POST: Save Newsletter Subscription
+    app.post("/newsletter-subscription", async (req, res) => {
+      const { name, email } = req.body;
+
+      if (!name || !email) {
+        return res
+          .status(400)
+          .json({ message: "Name and email are required." });
+      }
+
+      try {
+        const result = await newslettersCollection.insertOne({
+          name,
+          email,
+          subscribedAt: new Date(),
+        });
+
+        res.status(201).send({ success: true, insertedId: result.insertedId });
+      } catch (error) {
+        console.error("Newsletter subscription failed:", error);
+        res.status(500).send({ success: false, message: "Server Error" });
+      }
     });
 
     // Optional: Test ping
