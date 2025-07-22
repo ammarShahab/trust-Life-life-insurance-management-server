@@ -13,7 +13,13 @@ app.use(cors());
 app.use(express.json());
 const stripe = require("stripe")(process.env.Stripe_Secret_Key);
 
-const serviceAccount = require("./firbase_admin_key.json");
+const decodedKey = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString(
+  "utf8"
+);
+
+// const serviceAccount = require("./firbase_admin_key.json");
+const serviceAccount = JSON.parse(decodedKey);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
