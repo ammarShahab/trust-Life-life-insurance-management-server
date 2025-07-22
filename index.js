@@ -104,7 +104,7 @@ async function run() {
         const query = category ? { category } : {};
         const policies = await policiesCollection.find(query).toArray(); */
         // res.send(policies);
-        res.json(policies);
+        // res.json(policies);
       } catch (error) {
         console.error("❌ Error fetching policies:", error);
         res.status(500).json({ message: "Internal Server Error" });
