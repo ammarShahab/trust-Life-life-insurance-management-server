@@ -589,6 +589,7 @@ async function run() {
     app.get("/customers/role/:email", verifyFBToken, async (req, res) => {
       try {
         const email = req.params.email;
+        // console.log(email);
 
         if (!email) {
           return res.status(400).json({ message: "Email is required" });
@@ -603,6 +604,8 @@ async function run() {
         if (!customer) {
           return res.status(404).json({ message: "Customer not found" });
         }
+
+        // console.log("role", customer.role);
 
         res.send({
           role: customer.role || "customer",
