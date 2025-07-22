@@ -75,8 +75,6 @@ async function run() {
       } catch (error) {
         return res.status(403).send({ message: "Forbidden: Invalid token" });
       }
-      // todo: in server side all the get operation using email will also verified by this decoded like following from 25.12
-      // console.log("decoded", req.decoded);
     };
 
     // save policies data to the db
