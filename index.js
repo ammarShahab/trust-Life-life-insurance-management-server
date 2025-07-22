@@ -32,7 +32,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
     const db = client.db("trustLife_db");
     const policiesCollection = db.collection("policies");
     const customersCollection = db.collection("customers");
@@ -1041,7 +1041,7 @@ async function run() {
     });
 
     // Optional: Test ping
-    await db.command({ ping: 1 });
+    // await db.command({ ping: 1 });
     console.log("✅ Connected to MongoDB!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
