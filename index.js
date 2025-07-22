@@ -44,7 +44,7 @@ async function run() {
 
     // create custom middleware to verify fb token
     const verifyFBToken = async (req, res, next) => {
-      console.log("headers in middleware", req.headers);
+      // console.log("headers in middleware", req.headers);
 
       // check headers
       const authHeader = req.headers.authorization;
@@ -63,21 +63,21 @@ async function run() {
       try {
         const decoded = await admin.auth().verifyIdToken(token);
         req.decoded = decoded;
-        console.log("✅ Firebase decoded token:", decoded);
+        // console.log("✅ Firebase decoded token:", decoded);
 
         next();
       } catch (error) {
         return res.status(403).send({ message: "Forbidden: Invalid token" });
       }
       // todo: in server side all the get operation using email will also verified by this decoded like following from 25.12
-      console.log("decoded", req.decoded);
+      // console.log("decoded", req.decoded);
     };
 
     // save policies data to the db
     app.post("/policies", async (req, res) => {
       try {
         const newPolicy = req.body;
-        console.log(newPolicy);
+        // console.log(newPolicy);
 
         const result = await policiesCollection.insertOne(newPolicy);
         res.send(result);
@@ -91,7 +91,7 @@ async function run() {
     app.get("/policies", verifyFBToken, async (req, res) => {
       try {
         // for checking the decoded data in server
-        console.log("decoded", req.decoded);
+        // console.log("decoded", req.decoded);
         const policies = await policiesCollection.find().toArray();
         res.send(policies);
         /*  const { category } = req.query;
@@ -208,7 +208,7 @@ async function run() {
         const updatedPolicy = req.body;
 
         // 🛡️ Prevent MongoDB _id mutation error
-        console.log("Updating Policy ID:", id, updatedPolicy);
+        // console.log("Updating Policy ID:", id, updatedPolicy);
         delete updatedPolicy._id;
 
         // Check for valid ObjectId
@@ -263,7 +263,7 @@ async function run() {
     app.post("/policy-applications", verifyFBToken, async (req, res) => {
       try {
         const applicationData = req.body;
-        console.log(applicationData);
+        // console.log(applicationData);
 
         const { email, policyId } = applicationData;
 
@@ -324,7 +324,7 @@ async function run() {
       async (req, res) => {
         try {
           const id = req.params.applicationId;
-          console.log("application id", id);
+          // console.log("application id", id);
 
           if (!ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid application ID" });
@@ -352,10 +352,10 @@ async function run() {
         const paidApplications = await applicationsCollection
           .find({ status: "paid" })
           .toArray();
-        console.log(
+        /* console.log(
           "paidApplication from /applications/paid routes",
           paidApplications
-        );
+        ); */
 
         res.send(paidApplications);
       } catch (error) {
@@ -804,7 +804,7 @@ async function run() {
         try {
           const { applicationId } = req.params;
           const { claim_reason, claim_document, claim_status } = req.body;
-          console.log("claim doc", claim_document);
+          // console.log("claim doc", claim_document);
 
           const result = await applicationsCollection.updateOne(
             { _id: new ObjectId(applicationId) },
@@ -918,7 +918,7 @@ async function run() {
     app.post("/create-payment-intent", async (req, res) => {
       const { amount, paymentDuration } = req.body;
       // const paymentDuration = req.body.paymentDuration;
-      console.log(paymentDuration);
+      // console.log(paymentDuration);
 
       try {
         const paymentIntent = await stripe.paymentIntents.create({
@@ -948,7 +948,7 @@ async function run() {
           status,
         } = req.body;
 
-        console.log(req.body);
+        // console.log(req.body);
 
         const paymentTime = new Date().toISOString();
 
@@ -980,7 +980,7 @@ async function run() {
           paymentDuration,
         };
 
-        console.log(paymentData);
+        // console.log(paymentData);
 
         const paymentSaveResult = await paymentsCollection.insertOne(
           paymentData
@@ -1005,7 +1005,7 @@ async function run() {
 
     app.post("/reviews", verifyFBToken, async (req, res) => {
       const reviewData = req.body;
-      console.log(reviewData);
+      // console.log(reviewData);
       const result = await reviewsCollection.insertOne(reviewData);
       res.send(result);
     });
