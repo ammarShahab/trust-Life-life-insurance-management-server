@@ -605,7 +605,7 @@ async function run() {
           return res.status(404).json({ message: "Customer not found" });
         }
 
-        console.log("role", customer.role);
+        // console.log("role", customer.role);
 
         res.send({
           role: customer.role || "customer",
