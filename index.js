@@ -109,31 +109,6 @@ async function run() {
       }
     });
 
-    // all policies for public route
-    /* app.get("/all-policies", async (req, res) => {
-      try {
-        const { category, search } = req.query;
-
-        const query = {};
-
-        // Filter by category
-        if (category) {
-          query.category = category;
-        }
-
-        // Search by title using case-insensitive regex
-        if (search) {
-          query.title = { $regex: search, $options: "i" }; // 'i' = case-insensitive
-        }
-
-        const policies = await policiesCollection.find(query).toArray();
-        res.send(policies);
-      } catch (error) {
-        console.error("❌ Error fetching policies:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-      }
-    }); */
-
     // Backend route: GET /all-policies
     app.get("/all-policies", async (req, res) => {
       try {
