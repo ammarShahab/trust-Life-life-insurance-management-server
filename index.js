@@ -170,12 +170,15 @@ async function run() {
     // Get popular policies
     // GET top 6 most purchased policies
     app.get("/popular-policies", async (req, res) => {
+      // console.log("Backend route hit");
       try {
         const result = await policiesCollection
           .find({})
           .sort({ purchasedCount: -1 })
-          .limit(6)
+          .limit(8)
           .toArray();
+        // console.log("Backend result length:", result.length); // <-- Check how many items are returned
+        // console.log("Backend result:", result);
         res.send(result);
       } catch (error) {
         res.status(500).send({ error: "Failed to fetch popular policies" });
