@@ -682,7 +682,7 @@ async function run() {
         const latestBlogs = await blogsCollection
           .find({})
           .sort({ publishDate: -1 }) // newest first
-          .limit(4)
+          .limit(8)
           .toArray();
 
         res.status(200).json(latestBlogs);
