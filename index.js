@@ -81,7 +81,7 @@ async function run() {
     app.post("/policies", async (req, res) => {
       try {
         const newPolicy = req.body;
-        console.log(newPolicy);
+        // console.log(newPolicy);
 
         const result = await policiesCollection.insertOne(newPolicy);
         res.send(result);
